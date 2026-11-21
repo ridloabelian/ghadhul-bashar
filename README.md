@@ -2,6 +2,9 @@
 
 > **Fast, 100% On-Device Surgical AI Gaze-Protection Platform (`v1.1.0`)** — Open Source (`AGPL-3.0`)
 
+- **Landing Page & Interactive Demo:** https://ridloabelian.github.io/ghadhul-bashar/
+- **Downloads (`v1.1.0` Chrome & Firefox ZIPs):** https://github.com/ridloabelian/ghadhul-bashar/releases/tag/v1.1.0
+
 Ghadhul Bashar (`ghadhul-bashar`) is built from scratch to solve the architectural, accuracy, privacy, and performance bottlenecks of legacy gaze-protection tools (`HaramBlur`, `NoHaram`, `SafeGaze`, `Porda AI`, `Tahir`, and `NSFW Filter`).
 
 ## Key Capabilities
