@@ -2,8 +2,10 @@ import {
   applyProfilePreset,
   derivePinHash,
   evaluatePolicy,
+  isHostnameWhitelisted,
   isTimeLocked,
   isWeakeningChange,
+  parseAndValidateImport,
   startUnlockCooldown,
   verifyPartnerPin,
   type ExtensionSettings,
@@ -247,6 +249,8 @@ chrome.runtime.onMessage.addListener(
     if (
       message.type === 'GB_OFFSCREEN_ANALYZE_URL' ||
       message.type === 'GB_OFFSCREEN_ANALYZE_FRAME' ||
+      message.type === 'GB_OFFSCREEN_CLEAR_CACHE' ||
+      message.type === 'GB_OFFSCREEN_BENCHMARK_ANALYZE' ||
       message.type === 'GB_GET_ENGINE_STATUS'
     ) {
       // Handled exclusively by the offscreen document on Chrome; only answer status on Firefox.
@@ -262,6 +266,47 @@ chrome.runtime.onMessage.addListener(
       return false;
     }
 
+    if (message.type === 'GB_CLEAR_CACHE') {
+      void ensureOffscreenReady()
+        .then(async () => {
+          if (directHost) {
+            await directHost.clearCache();
+            sendResponse({ ok: true });
+            return;
+          }
+          const resp = await chrome.runtime.sendMessage({
+            type: 'GB_OFFSCREEN_CLEAR_CACHE',
+          } satisfies RuntimeRequest);
+          sendResponse(resp ?? { ok: true });
+        })
+        .catch(() => sendResponse({ ok: false }));
+      return true;
+    }
+
+    if (message.type === 'GB_BENCHMARK_ANALYZE') {
+      void ensureOffscreenReady()
+        .then(async () => {
+          if (directHost) {
+            const raw = await directHost.benchmarkDataUrl(message.dataUrl, message.cascadeMode);
+            sendResponse({ ok: true, raw } satisfies AnalyzeResponse);
+            return;
+          }
+          const resp = (await chrome.runtime.sendMessage({
+            type: 'GB_OFFSCREEN_BENCHMARK_ANALYZE',
+            dataUrl: message.dataUrl,
+            cascadeMode: message.cascadeMode,
+          } satisfies RuntimeRequest)) as AnalyzeResponse;
+          sendResponse(resp);
+        })
+        .catch((err) =>
+          sendResponse({
+            ok: false,
+            error: err instanceof Error ? err.message : String(err),
+          } satisfies AnalyzeResponse)
+        );
+      return true;
+    }
+
     if (message.type === 'GB_GET_SETTINGS') {
       void loadSettings().then((settings) => sendResponse(settings));
       return true;
@@ -271,7 +316,7 @@ chrome.runtime.onMessage.addListener(
       void loadSettings().then((settings) => {
         const topUrl = sender.tab?.url || message.frameUrl;
         const hostname = normalizeHostname(topUrl);
-        const whitelisted = settings.whitelist.includes(hostname);
+        const whitelisted = isHostnameWhitelisted(hostname, settings.whitelist);
         sendResponse({
           enabled: settings.enabled && !whitelisted,
           whitelisted,
@@ -284,6 +329,25 @@ chrome.runtime.onMessage.addListener(
 
     if (message.type === 'GB_UPDATE_SETTINGS') {
       void commitSettingsChange(message.next, message.pin).then(sendResponse);
+      return true;
+    }
+
+    if (message.type === 'GB_IMPORT_SETTINGS') {
+      void loadSettings().then(async (current) => {
+        let next: ExtensionSettings;
+        try {
+          next = parseAndValidateImport(message.jsonText, current);
+        } catch {
+          sendResponse({
+            ok: false,
+            settings: current,
+            error: 'INVALID_CONFIG',
+          } satisfies UpdateSettingsResponse);
+          return;
+        }
+        const res = await commitSettingsChange(next, message.pin);
+        sendResponse(res);
+      });
       return true;
     }
 
@@ -300,9 +364,12 @@ chrome.runtime.onMessage.addListener(
     if (message.type === 'GB_TOGGLE_SITE') {
       void loadSettings().then(async (current) => {
         const host = normalizeHostname(message.hostname);
-        const exists = current.whitelist.includes(host);
-        const whitelist = exists
-          ? current.whitelist.filter((h) => h !== host)
+        const covered = isHostnameWhitelisted(host, current.whitelist);
+        const whitelist = covered
+          ? current.whitelist.filter((entry) => {
+              const clean = normalizeHostname(entry);
+              return !(host === clean || host.endsWith(`.${clean}`));
+            })
           : [...current.whitelist, host];
         const next: ExtensionSettings = { ...current, whitelist };
         const res = await commitSettingsChange(next, message.pin);

@@ -132,4 +132,21 @@ export class TwoTierVisionCache {
       // Non-fatal cache write error
     }
   }
+
+  async clear(): Promise<void> {
+    this.urlMap.clear();
+    this.dhashLru.clear();
+    const db = await this.getDb();
+    if (!db) return;
+    await new Promise<void>((resolve) => {
+      try {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).clear();
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+      } catch {
+        resolve();
+      }
+    });
+  }
 }

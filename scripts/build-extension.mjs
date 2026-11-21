@@ -88,6 +88,7 @@ async function buildTarget(target) {
       offscreen: path.join(SRC_DIR, 'offscreen', 'index.ts'),
       'ui/popup': path.join(SRC_DIR, 'ui', 'popup.ts'),
       'ui/onboarding': path.join(SRC_DIR, 'ui', 'onboarding.ts'),
+      'ui/options': path.join(SRC_DIR, 'ui', 'options.ts'),
     },
     format: 'esm',
     splitting: false,
@@ -100,7 +101,7 @@ async function buildTarget(target) {
 
   const uiOut = path.join(outDir, 'ui');
   fs.mkdirSync(uiOut, { recursive: true });
-  for (const uiFile of ['popup.html', 'onboarding.html', 'styles.css']) {
+  for (const uiFile of ['popup.html', 'onboarding.html', 'options.html', 'styles.css']) {
     fs.copyFileSync(path.join(SRC_DIR, 'ui', uiFile), path.join(uiOut, uiFile));
   }
 
@@ -118,7 +119,7 @@ async function buildTarget(target) {
   }
 
   // 4) Security check: verify content script & UI contain zero external CDN URLs
-  for (const file of ['content.js', 'ui/popup.js', 'ui/onboarding.js']) {
+  for (const file of ['content.js', 'ui/popup.js', 'ui/onboarding.js', 'ui/options.js']) {
     const text = fs.readFileSync(path.join(outDir, file), 'utf8');
     if (text.includes('jsdelivr.net') || text.includes('unpkg.com')) {
       throw new Error(`Security check failed: external CDN reference found in ${target.name}/${file}`);

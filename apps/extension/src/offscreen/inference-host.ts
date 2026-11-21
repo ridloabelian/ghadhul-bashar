@@ -227,4 +227,53 @@ export class InferenceHost {
       bitmap?.close();
     }
   }
+
+  async clearCache(): Promise<void> {
+    await this.cache.clear();
+  }
+
+  async benchmarkDataUrl(
+    dataUrl: string,
+    cascadeMode: 'adaptive' | 'legacy-full'
+  ): Promise<RawDetectionOutput> {
+    const res = await this.enqueue({
+      priority: 15,
+      run: async () => {
+        const resp = await fetch(dataUrl);
+        const blob = await resp.blob();
+        let bitmap: ImageBitmap | null = null;
+        try {
+          bitmap = await createImageBitmap(blob);
+          const engine = await this.ensureEngine();
+          const maxDim = Math.max(bitmap.width, bitmap.height);
+          let analyzeSource: ImageBitmap | OffscreenCanvas = bitmap;
+          let targetW = bitmap.width;
+          let targetH = bitmap.height;
+
+          if (maxDim > MAX_DECODE_DIM) {
+            const scale = MAX_DECODE_DIM / maxDim;
+            targetW = Math.max(1, Math.round(bitmap.width * scale));
+            targetH = Math.max(1, Math.round(bitmap.height * scale));
+            const down = new OffscreenCanvas(targetW, targetH);
+            const dCtx = down.getContext('2d');
+            if (dCtx) {
+              dCtx.drawImage(bitmap, 0, 0, targetW, targetH);
+              analyzeSource = down;
+            }
+          }
+
+          const raw = await engine.analyzeSource(analyzeSource, targetW, targetH, {
+            runNsfw: true,
+            minConfidence: 0.14,
+            maxFaces: 16,
+            cascadeMode,
+          });
+          return { raw, fromCache: false };
+        } finally {
+          bitmap?.close();
+        }
+      },
+    });
+    return res.raw;
+  }
 }

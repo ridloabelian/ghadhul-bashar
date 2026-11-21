@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="id" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ghadhul Bashar (غض البصر) — Fast 100% On-Device Surgical AI Gaze Shield</title>
+    <meta
+      name="description"
+      content="Protect your gaze without breaking the web. 100% on-device surgical AI masking (WebGPU + WASM SIMD), zero-flash shield, child exemption, and offline Time-Lock."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="nav">
+      <div class="container nav-inner">
+        <a class="brand" href="#top">
+          <span class="shield-mark" aria-hidden="true">غ</span>
+          <span>
+            <strong>Ghadhul Bashar</strong>
+            <small class="arabic">غض البصر</small>
+          </span>
+        </a>
+        <nav class="nav-links">
+          <a href="#demo" data-i18n="navDemo">Demo</a>
+          <a href="#architecture" data-i18n="navArch">Arsitektur</a>
+          <a href="#compare" data-i18n="navCompare">Perbandingan</a>
+          <a href="privacy.html" data-i18n="navPrivacy">Privasi</a>
+          <select id="langSelect" class="lang-select" aria-label="Language">
+            <option value="id">ID</option>
+            <option value="en">EN</option>
+            <option value="ar">AR</option>
+          </select>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="container hero-grid">
+          <div>
+            <div class="pill-badge" data-i18n="heroBadge">
+              100% On-Device AI · Open Source AGPL-3.0 · v1.1.0
+            </div>
+            <h1 data-i18n="heroTitle">
+              Lindungi Pandangan Tanpa Merusak Halaman Web.
+            </h1>
+            <p class="lead" data-i18n="heroDesc">
+              Ekstensi browser generasi baru dengan Smart Surgical Masking di dalam Closed Shadow DOM, Zero-Flash Shield 0 ms, dan Adaptive Cascade &lt;150 ms — 100% lokal tanpa internet.
+            </p>
+            <div class="cta-row">
+              <a
+                class="btn btn-primary"
+                href="https://github.com/ridloabelian/ghadhul-bashar/releases/latest"
+                data-i18n="ctaChrome"
+              >
+                Unduh Chrome / Brave / Edge (.zip)
+              </a>
+              <a
+                class="btn btn-outline"
+                href="https://github.com/ridloabelian/ghadhul-bashar/releases/latest"
+                data-i18n="ctaFirefox"
+              >
+                Unduh Firefox (.zip)
+              </a>
+              <a
+                class="btn btn-ghost"
+                href="https://github.com/ridloabelian/ghadhul-bashar"
+                data-i18n="ctaGithub"
+              >
+                Kode Sumber GitHub
+              </a>
+            </div>
+            <div class="metrics-strip">
+              <div>
+                <strong>&lt; 150 ms</strong>
+                <span data-i18n="metricWasm">Adaptive WASM CPU</span>
+              </div>
+              <div>
+                <strong>&lt; 0.1 ms</strong>
+                <span data-i18n="metricDhash">64-bit dHash Cache</span>
+              </div>
+              <div>
+                <strong>0 KB</strong>
+                <span data-i18n="metricCloud">Data ke Server Luar</span>
+              </div>
+              <div>
+                <strong>4 Model</strong>
+                <span data-i18n="metricModels">ONNX XNNPACK Lokal</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Surgical Demo -->
+          <div class="demo-card" id="demo">
+            <div class="demo-toolbar">
+              <span class="demo-title" data-i18n="demoToolbarTitle">Simulasi Sensor Interaktif</span>
+              <div class="segmented" id="demoModeGroup">
+                <button class="seg-btn active" data-mode="surgical" data-i18n="modeSurgical">
+                  Surgical (Ghadhul Bashar)
+                </button>
+                <button class="seg-btn" data-mode="whole" data-i18n="modeWhole">
+                  Whole-Blur (Lama)
+                </button>
+                <button class="seg-btn" data-mode="off" data-i18n="modeOff">
+                  Tanpa Proteksi
+                </button>
+              </div>
+            </div>
+
+            <div class="demo-viewport" id="demoViewport">
+              <div class="demo-slide">
+                <span class="slide-tag">Lecture Slide</span>
+                <h3>Tajwid &amp; Tafsir Surah An-Nur: 30</h3>
+                <code>katakanlah kepada laki-laki yang beriman...</code>
+                <p data-i18n="demoSlideNote">
+                  Teks materi kuliah, kode program, dan deskripsi produk tetap 100% tajam terbaca.
+                </p>
+              </div>
+              <div class="demo-people">
+                <div class="person-card">
+                  <div class="avatar female" id="demoFemale">
+                    <span class="face-circle"></span>
+                    <span class="body-shape"></span>
+                    <div class="surgical-box" id="maskFemale"></div>
+                  </div>
+                  <small data-i18n="personFemale">Dewasa (Wanita)</small>
+                </div>
+                <div class="person-card">
+                  <div class="avatar male" id="demoMale">
+                    <span class="face-circle"></span>
+                    <span class="body-shape"></span>
+                    <div class="surgical-box hidden" id="maskMale"></div>
+                  </div>
+                  <small data-i18n="personMale">Dewasa (Pria)</small>
+                </div>
+                <div class="person-card">
+                  <div class="avatar child" id="demoChild">
+                    <span class="face-circle"></span>
+                    <span class="body-shape"></span>
+                  </div>
+                  <small data-i18n="personChild">Anak (&lt;10 thn · Aman)</small>
+                </div>
+              </div>
+              <div class="demo-whole-overlay hidden" id="demoWholeOverlay"></div>
+            </div>
+
+            <div class="profile-switcher" id="demoProfiles">
+              <button class="chip active" data-profile="brothers" data-i18n="profBrothers">
+                Ikhwan
+              </button>
+              <button class="chip" data-profile="sisters" data-i18n="profSisters">
+                Akhwat
+              </button>
+              <button class="chip" data-profile="family" data-i18n="profFamily">
+                Keluarga
+              </button>
+              <button class="chip" data-profile="strict" data-i18n="profStrict">
+                Strict
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="architecture">
+        <div class="container">
+          <h2 data-i18n="archHeading">Arsitektur Fase 2: Cepat, Presisi, Zero-Breakage</h2>
+          <p class="section-sub" data-i18n="archSub">
+            Dibangun dari nol untuk mengatasi lambatnya model tunggal, kebocoran kilatan frame, dan error CORS pada ekstensi pelindung pandangan terdahulu.
+          </p>
+          <div class="cards-3">
+            <article class="feature-card">
+              <h3>Adaptive 4-Stage Cascade</h3>
+              <p data-i18n="feat1Desc">
+                Stage 0 menyaring UI/gradien dalam &lt;1 ms, Stage 1 YuNet mendeteksi wajah hingga 16 orang, Stage 2–3 NudeNet &amp; AGR0013 mengecualikan anak &lt;10 tahun, dan Marqo ViT-Tiny hanya dipanggil pada gambar ambigu atau manga/ilustrasi.
+              </p>
+            </article>
+            <article class="feature-card">
+              <h3>Closed Shadow DOM + Zero-Flash</h3>
+              <p data-i18n="feat2Desc">
+                Media langsung ditutup shimmer saat masuk DOM sebelum pixel dirender. Overlay hidup di dalam Closed Shadow Root di luar pohon DOM situs sehingga tidak memicu error hidrasi React/Next.js.
+              </p>
+            </article>
+            <article class="feature-card">
+              <h3>Zero-CORS &amp; Offline Vault</h3>
+              <p data-i18n="feat3Desc">
+                Tidak pernah mengubah atribut crossorigin atau dimensi elemen — menjaga audio/video lintas-domain tetap lancar. Dilengkapi Commitment Time-Lock, Partner PIN PBKDF2-SHA-256, dan Export/Import JSON.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-alt" id="compare">
+        <div class="container">
+          <h2 data-i18n="compareHeading">Perbandingan Jujur dengan Ekstensi Terdahulu</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="colFeature">Kemampuan</th>
+                  <th>Ghadhul Bashar (`v1.1.0`)</th>
+                  <th>HaramBlur / SafeGaze</th>
+                  <th>NoHaram / Porda AI</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-i18n="rowSurgical">Smart Surgical Mask (Teks Tetap Tajam)</td>
+                  <td class="yes">Closed Shadow DOM + Ambient/Frosted</td>
+                  <td class="partial">Whole-image blur / rentan CSS situs</td>
+                  <td class="partial">Whole-image / DOM mutation</td>
+                </tr>
+                <tr>
+                  <td data-i18n="rowChild">Pengecualian Anak Otomatis (&lt;10 thn)</td>
+                  <td class="yes">Ya (Intel AGR0013 + Fusi Logit)</td>
+                  <td class="no">Tidak</td>
+                  <td class="no">Tidak</td>
+                </tr>
+                <tr>
+                  <td data-i18n="rowCors">Zero-CORS &amp; SSR Hydration Safe</td>
+                  <td class="yes">0 mutasi atribut &amp; zero CDN</td>
+                  <td class="no">Mengubah crossorigin / atribut DOM</td>
+                  <td class="partial">Hanya sebagian</td>
+                </tr>
+                <tr>
+                  <td data-i18n="rowBundle">Ukuran Bundel Model + Kecepatan CPU</td>
+                  <td class="yes">~21.9 MB XNNPACK · &lt;150 ms Adaptive</td>
+                  <td class="partial">~5–15 MB · wajah kecil/grup terlewat</td>
+                  <td class="no">89 MB+ · lambat di CPU</td>
+                </tr>
+                <tr>
+                  <td data-i18n="rowVault">Offline Time-Lock, Partner PIN &amp; Export/Import</td>
+                  <td class="yes">100% Offline + Enterprise Policy</td>
+                  <td class="no">Sangat dasar / mudah dimatikan</td>
+                  <td class="no">Tidak ada</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <span>Ghadhul Bashar (غض البصر) — AGPL-3.0 Open Source</span>
+        <div class="footer-links">
+          <a href="privacy.html" data-i18n="navPrivacy">Privasi</a>
+          <a href="https://github.com/ridloabelian/ghadhul-bashar">GitHub</a>
+          <a href="https://github.com/ridloabelian/ghadhul-bashar/releases">Releases</a>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

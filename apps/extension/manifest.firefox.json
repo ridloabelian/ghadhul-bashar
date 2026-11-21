@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Ghadhul Bashar (غض البصر) — AI Gaze Shield",
   "short_name": "Ghadhul Bashar",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Fast, 100% on-device surgical AI gaze protection (WebGPU/WASM ONNX, Zero-Flash, Zero-Breakage).",
   "browser_specific_settings": {
     "gecko": {
@@ -13,9 +13,12 @@
   "permissions": [
     "storage",
     "contextMenus",
-    "scripting",
     "activeTab"
   ],
+  "options_ui": {
+    "page": "ui/options.html",
+    "open_in_tab": true
+  },
   "host_permissions": [
     "<all_urls>"
   ],

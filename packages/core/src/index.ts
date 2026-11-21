@@ -6,3 +6,4 @@ export * from './tracker.js';
 export * from './timelock.js';
 export * from './geometry.js';
 export * from './i18n.js';
+export * from './config-io.js';

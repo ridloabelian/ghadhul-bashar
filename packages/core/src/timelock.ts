@@ -100,7 +100,7 @@ export function isWeakeningChange(
   next: ExtensionSettings
 ): boolean {
   if (current.enabled && !next.enabled) return true;
-  if (next.whitelist.length > current.whitelist.length) return true;
+  if (next.whitelist.some((h) => !current.whitelist.includes(h))) return true;
   if (current.zeroFlashShield && !next.zeroFlashShield) return true;
   if (current.failClosedOnError && !next.failClosedOnError) return true;
   if (!current.altHoverPeek && next.altHoverPeek) return true;
@@ -116,6 +116,7 @@ export function isWeakeningChange(
   if (cOvr.blurAwrahBody && !nOvr.blurAwrahBody) return true;
   if (cOvr.blurExposedNudity && !nOvr.blurExposedNudity) return true;
   if (cOvr.autoEscalateNsfw && !nOvr.autoEscalateNsfw) return true;
+  if (nOvr.exemptChildrenUnderAge > cOvr.exemptChildrenUnderAge) return true;
 
   return false;
 }

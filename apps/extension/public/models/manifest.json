@@ -2,8 +2,8 @@
   "models": [
     {
       "file": "nudenet-320n.quant.onnx",
-      "sizeBytes": 8092983,
-      "sha256": "52076305a914654b79eb93343bc8ac8e4e9175c226275ac5da41360f64c44d95",
+      "sizeBytes": 6118619,
+      "sha256": "fdf304075decb3c3ce102ff4205b99f7673b6616beed19d832cbaa7b52bd382f",
       "inputName": "pixels",
       "inputShape": [
         1,
@@ -43,8 +43,8 @@
     },
     {
       "file": "agr0013-age-gender.quant.onnx",
-      "sizeBytes": 4318277,
-      "sha256": "08d2f6ea91f863075ab9a5fddb7afaeaab482dd8028e6405040dd000fa073c8d",
+      "sizeBytes": 4285901,
+      "sha256": "02106b71859b7607d89631902039921c15c809dcd7d3b11b18d45c2df60f2d0d",
       "inputName": "pixels",
       "inputShape": [
         1,
@@ -59,8 +59,8 @@
     },
     {
       "file": "marqo-nsfw-tiny.quant.onnx",
-      "sizeBytes": 6632454,
-      "sha256": "32bf8039573c90169f64117948c9a702b725e16d82bddace260108c0cea6e166",
+      "sizeBytes": 11342529,
+      "sha256": "454c00314f2230e09457004af243735ea1a6e668c6a82bce255a508d999e252d",
       "inputName": "pixels",
       "inputShape": [
         1,
@@ -73,5 +73,5 @@
       ]
     }
   ],
-  "totalSizeBytes": 19273798
+  "totalSizeBytes": 21977133
 }

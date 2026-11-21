@@ -424,10 +424,40 @@ async function run() {
     assert.equal(lockAttempt.ok, false, 'Offline Time-Lock must block disabling protection');
     assert.equal(lockAttempt.error, 'LOCKED');
 
+    // 6. Verify Full Options page, safe Export (strips PIN/lock), and Time-Lock enforcement on Import
+    const optionsPage = await context.newPage();
+    await optionsPage.goto(`chrome-extension://${extId}/ui/options.html`, { waitUntil: 'domcontentloaded' });
+    await optionsPage.waitForSelector('#exportBtn');
+    const optionsChecks = await optionsPage.evaluate(async () => {
+      const current = await chrome.runtime.sendMessage({ type: 'GB_GET_SETTINGS' });
+      const blockedImport = await chrome.runtime.sendMessage({
+        type: 'GB_IMPORT_SETTINGS',
+        jsonText: JSON.stringify({
+          app: 'ghadhul-bashar',
+          schemaVersion: 1,
+          settings: { ...current, enabled: false },
+        }),
+      });
+      const safeImport = await chrome.runtime.sendMessage({
+        type: 'GB_IMPORT_SETTINGS',
+        jsonText: JSON.stringify({
+          app: 'ghadhul-bashar',
+          schemaVersion: 1,
+          settings: { ...current, blurIntensityPx: 28 },
+        }),
+      });
+      return { blockedImport, safeImport };
+    });
+    assert.equal(optionsChecks.blockedImport.ok, false, 'Import weakening settings must fail while locked');
+    assert.equal(optionsChecks.blockedImport.error, 'LOCKED');
+    assert.equal(optionsChecks.safeImport.ok, true, 'Strengthening import must succeed');
+    assert.equal(optionsChecks.safeImport.settings.blurIntensityPx, 28);
+    await optionsPage.close();
+
     assert.equal(pageErrors.length, 0, `Unexpected page errors: ${pageErrors.join('; ')}`);
 
     console.log(
-      `[E2E PASS] backend=${telemetry.backend}, checked=${telemetry.checkedCount}, cacheHits=${telemetry.cacheHitCount}, avgLatency=${telemetry.avgLatencyMs}ms, zeroCorsBreakage=OK, ssrHydrationSafe=OK, currentSrcOnly=OK, timeLock=OK`
+      `[E2E PASS] backend=${telemetry.backend}, checked=${telemetry.checkedCount}, cacheHits=${telemetry.cacheHitCount}, avgLatency=${telemetry.avgLatencyMs}ms, zeroCorsBreakage=OK, ssrHydrationSafe=OK, currentSrcOnly=OK, timeLock=OK, optionsImport=OK`
     );
   } finally {
     await context?.close().catch(() => {});

@@ -101,4 +101,8 @@ export class DHashLRUCache<T> {
   get size(): number {
     return this.entries.size;
   }
+
+  clear(): void {
+    this.entries.clear();
+  }
 }

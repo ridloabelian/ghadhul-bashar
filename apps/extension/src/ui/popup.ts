@@ -1,4 +1,5 @@
 import {
+  isHostnameWhitelisted,
   isTimeLocked,
   TRANSLATIONS,
   type ExtensionSettings,
@@ -34,6 +35,7 @@ function renderTranslations(locale: LocaleCode): void {
   el('autoMuteLabel').textContent = dict.autoMuteLabel;
   el('zeroFlashLabel').textContent = dict.zeroFlashLabel;
   el('selfControlTitle').textContent = dict.selfControlTitle;
+  el('openOptionsBtn').textContent = dict.openOptionsBtn;
 
   const profileButtons = document.querySelectorAll<HTMLButtonElement>('#profileGrid .pill-btn');
   for (const btn of profileButtons) {
@@ -68,7 +70,9 @@ function renderState(): void {
   globalBtn.textContent = currentSettings.enabled ? 'ON' : 'OFF';
   globalBtn.className = currentSettings.enabled ? 'btn btn-primary btn-sm' : 'btn btn-danger btn-sm';
 
-  const isWhitelisted = activeHostname ? currentSettings.whitelist.includes(activeHostname) : false;
+  const isWhitelisted = activeHostname
+    ? isHostnameWhitelisted(activeHostname, currentSettings.whitelist)
+    : false;
   const siteBtn = el<HTMLButtonElement>('toggleSiteBtn');
   siteBtn.textContent = isWhitelisted ? dict.siteWhitelisted : dict.siteToggleLabel;
   siteBtn.className = isWhitelisted ? 'btn btn-danger btn-sm' : 'btn btn-sm';
@@ -255,6 +259,10 @@ async function init(): Promise<void> {
       el<HTMLInputElement>('pinInput').value = '';
       renderState();
     }
+  });
+
+  el<HTMLButtonElement>('openOptionsBtn').addEventListener('click', () => {
+    void chrome.runtime.openOptionsPage();
   });
 }
 

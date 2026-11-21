@@ -164,6 +164,13 @@ export class VideoGuardManager {
   }
 
   private syncLoop(rec: VideoGuardRecord): void {
+    if (!rec.video.isConnected) {
+      rec.loopActive = false;
+      this.activeVideos.delete(rec.video);
+      this.overlay.removeElement(rec.video);
+      return;
+    }
+
     const shouldRun =
       this.settings.enabled &&
       rec.isIntersecting &&
@@ -207,6 +214,10 @@ export class VideoGuardManager {
       !video.isConnected
     ) {
       rec.loopActive = false;
+      if (!video.isConnected) {
+        this.activeVideos.delete(video);
+        this.overlay.removeElement(video);
+      }
       return;
     }
 

@@ -51,6 +51,7 @@ export interface RawDetectionOutput {
   ambientColor: [number, number, number];
   backend: 'webgpu' | 'wasm' | 'heuristic';
   latencyMs: number;
+  stagesRun?: string[];
 }
 
 export interface DetectionVerdict {
@@ -61,6 +62,7 @@ export interface DetectionVerdict {
   fromCache: boolean;
   latencyMs: number;
   backend: 'webgpu' | 'wasm' | 'heuristic';
+  stagesRun?: string[];
 }
 
 export interface PolicyRuleOverrides {

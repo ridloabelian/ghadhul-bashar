@@ -1,4 +1,8 @@
-import { createDefaultSettings, type ExtensionSettings } from '@ghadhul-bashar/core';
+import {
+  createDefaultSettings,
+  isHostnameWhitelisted,
+  type ExtensionSettings,
+} from '@ghadhul-bashar/core';
 import type { ContentPushMessage, FrameAllowedResponse, RuntimeRequest } from '../shared/messages.js';
 import { MediaScanner } from './scanner.js';
 import { SurgicalOverlayManager } from './surgical-overlay.js';
@@ -54,7 +58,7 @@ chrome.runtime.onMessage.addListener((msg: ContentPushMessage, sender) => {
   if (sender.id && sender.id !== chrome.runtime.id) return;
   if (msg.type === 'GB_SETTINGS_CHANGED') {
     const next = msg.settings;
-    const whitelisted = next.whitelist.includes(currentHostname);
+    const whitelisted = isHostnameWhitelisted(currentHostname, next.whitelist);
     applyFrameState(next, next.enabled && !whitelisted);
   } else if (msg.type === 'GB_MANUAL_OVERRIDE' && frameActive) {
     const target = msg.selector

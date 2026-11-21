@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy — Ghadhul Bashar (غض البصر)</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="nav">
+      <div class="container nav-inner">
+        <a class="brand" href="index.html">
+          <span class="shield-mark" aria-hidden="true">غ</span>
+          <span><strong>Ghadhul Bashar</strong> <small class="arabic">غض البصر</small></span>
+        </a>
+        <nav class="nav-links">
+          <a href="index.html">Home</a>
+          <a href="https://github.com/ridloabelian/ghadhul-bashar">GitHub</a>
+        </nav>
+      </div>
+    </header>
+    <main class="container">
+      <article class="privacy-card">
+        <h1>Privacy Policy (100% On-Device)</h1>
+        <p>
+          Ghadhul Bashar (<code>غض البصر</code>) operates strictly inside your browser with zero external server communication.
+        </p>
+        <h2>Zero Data Collection or Transmission</h2>
+        <ul>
+          <li>No images, video frames, URLs, or browsing history are ever uploaded or logged remotely.</li>
+          <li>All 4 quantized ONNX AI models run locally on your device via WebGPU or WASM SIMD.</li>
+          <li>Zero analytics, crash telemetry, advertising trackers, or external CDNs exist in the package.</li>
+        </ul>
+        <h2>Local Browser Storage</h2>
+        <ul>
+          <li><code>chrome.storage.local</code> stores your Fiqh profile, mask style, allowlist, and offline PBKDF2-SHA-256 Time-Lock/PIN hash.</li>
+          <li><code>IndexedDB (gb_vision_cache_v1)</code> caches perceptual dHash verdicts locally for &lt;0.1 ms lookup and can be cleared anytime in Options.</li>
+        </ul>
+        <h2>Safe Configuration Exports</h2>
+        <p>
+          JSON configuration exports automatically strip offline Time-Lock/Partner PIN hashes and salts.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

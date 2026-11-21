@@ -7,6 +7,7 @@ interface MediaRecord {
   lastAnalyzedSrc: string;
   isIntersecting: boolean;
   inFlight: boolean;
+  requestSeq: number;
 }
 
 const BG_URL_REGEX = /url\(["']?(.*?)["']?\)/i;
@@ -24,6 +25,7 @@ export class MediaScanner {
   private disposed = false;
   private io: IntersectionObserver | null = null;
   private rightClickedEl: Element | null = null;
+  private mutationBatchCount = 0;
 
   constructor(
     overlay: SurgicalOverlayManager,
@@ -124,23 +126,43 @@ export class MediaScanner {
     this.observedRoots.add(root);
 
     const mo = new MutationObserver((mutations) => {
+      let needsSync = false;
+      let hasRemovals = false;
       for (const m of mutations) {
         if (m.type === 'childList') {
+          if (m.removedNodes.length > 0) {
+            hasRemovals = true;
+            needsSync = true;
+          }
           for (const added of m.addedNodes) {
             if (added instanceof Element) {
               this.scanSubtree(added);
+              needsSync = true;
             }
           }
         } else if (m.type === 'attributes' && m.target instanceof Element) {
           if (m.target instanceof HTMLImageElement || m.target instanceof HTMLVideoElement) {
             this.evaluateElement(m.target, false);
+            needsSync = true;
           } else if (m.target instanceof HTMLSourceElement && m.target.parentElement) {
             const img = m.target.parentElement.querySelector('img');
-            if (img) this.evaluateElement(img, false);
+            if (img) {
+              this.evaluateElement(img, false);
+              needsSync = true;
+            }
           } else if (m.attributeName === 'style') {
             this.checkBackgroundElement(m.target);
+            needsSync = true;
           }
         }
+      }
+      this.mutationBatchCount++;
+      if (hasRemovals || this.mutationBatchCount >= 50) {
+        this.mutationBatchCount = 0;
+        this.pruneDisconnected();
+      }
+      if (needsSync) {
+        this.overlay.scheduleSync();
       }
     });
 
@@ -148,9 +170,21 @@ export class MediaScanner {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['src', 'srcset', 'data-src', 'style', 'poster'],
+      attributeFilter: ['src', 'srcset', 'data-src', 'data-lazy-src', 'data-original', 'style', 'poster'],
     });
     this.observers.push(mo);
+
+    if (typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot) {
+      root.addEventListener(
+        'load',
+        (ev) => {
+          if (ev.target instanceof HTMLImageElement) {
+            this.evaluateElement(ev.target, false);
+          }
+        },
+        true
+      );
+    }
 
     if (root instanceof Element || root instanceof Document || root instanceof ShadowRoot) {
       this.scanSubtree(root);
@@ -214,19 +248,67 @@ export class MediaScanner {
     this.evaluateElement(el, false);
   }
 
+  private pruneDisconnected(): void {
+    for (const el of Array.from(this.knownElements)) {
+      if (!el.isConnected) {
+        this.knownElements.delete(el);
+        this.io?.unobserve(el);
+        this.overlay.removeElement(el);
+      }
+    }
+  }
+
   private registerElement(el: Element): void {
     if (this.records.has(el)) return;
     this.records.set(el, {
       lastAnalyzedSrc: '',
       isIntersecting: true,
       inFlight: false,
+      requestSeq: 0,
     });
     this.knownElements.add(el);
     this.io?.observe(el);
   }
 
+  private toAbsoluteUrl(raw: string, base: string): string {
+    const trimmed = raw.trim();
+    if (!trimmed) return '';
+    if (
+      trimmed.startsWith('data:') ||
+      trimmed.startsWith('blob:') ||
+      trimmed.startsWith('http://') ||
+      trimmed.startsWith('https://')
+    ) {
+      return trimmed;
+    }
+    try {
+      return new URL(trimmed, base).href;
+    } catch {
+      return trimmed;
+    }
+  }
+
   private resolveImageSrc(el: HTMLImageElement): string {
-    return el.currentSrc || el.src || el.getAttribute('data-src') || '';
+    const dataLazy =
+      el.getAttribute('data-src') ||
+      el.getAttribute('data-lazy-src') ||
+      el.getAttribute('data-original') ||
+      '';
+    const hasResponsiveCandidates =
+      Boolean(el.getAttribute('srcset')) || el.parentElement?.tagName === 'PICTURE';
+    const rawPrimary = hasResponsiveCandidates
+      ? el.currentSrc || (el.complete ? el.src : '')
+      : el.src || el.currentSrc || '';
+
+    const chosen =
+      dataLazy &&
+      (!rawPrimary ||
+        rawPrimary.startsWith('data:image/gif;base64,R0lGOD') ||
+        (el.complete && el.naturalWidth > 0 && el.naturalWidth < 4))
+        ? dataLazy
+        : rawPrimary || dataLazy;
+
+    return this.toAbsoluteUrl(chosen, el.baseURI || document.baseURI);
   }
 
   private captureElementDataUrl(el: HTMLCanvasElement | HTMLImageElement): string | null {
@@ -272,12 +354,33 @@ export class MediaScanner {
 
     if (el instanceof HTMLImageElement) {
       const src = this.resolveImageSrc(el);
-      if (!src) return;
+      if (!src) {
+        if (
+          this.settings.zeroFlashShield &&
+          (el.getAttribute('srcset') ||
+            el.parentElement?.tagName === 'PICTURE' ||
+            el.getAttribute('src'))
+        ) {
+          this.overlay.setScanning(el);
+        }
+        return;
+      }
       if (!force && rec.lastAnalyzedSrc === src) return;
 
       // Skip known tiny decorative icons once natural dimensions are resolved
-      if (el.complete && el.naturalWidth > 0 && (el.naturalWidth < 28 || el.naturalHeight < 28)) {
+      const hasPendingLazy = Boolean(
+        el.getAttribute('data-src') ||
+          el.getAttribute('data-lazy-src') ||
+          el.getAttribute('data-original')
+      );
+      if (
+        el.complete &&
+        el.naturalWidth > 0 &&
+        (el.naturalWidth < 28 || el.naturalHeight < 28) &&
+        !(hasPendingLazy && src !== el.src && src !== el.currentSrc)
+      ) {
         rec.lastAnalyzedSrc = src;
+        rec.requestSeq += 1;
         this.overlay.setVerdict(el, {
           action: 'clear',
           regions: [],
@@ -290,7 +393,7 @@ export class MediaScanner {
         return;
       }
 
-      if (this.settings.zeroFlashShield && !rec.inFlight) {
+      if (this.settings.zeroFlashShield) {
         this.overlay.setScanning(el);
       }
 
@@ -318,7 +421,8 @@ export class MediaScanner {
 
     if (el instanceof SVGSVGElement) {
       const imgChild = el.querySelector('image');
-      const href = imgChild?.getAttribute('href') || imgChild?.getAttribute('xlink:href') || '';
+      const rawHref = imgChild?.getAttribute('href') || imgChild?.getAttribute('xlink:href') || '';
+      const href = this.toAbsoluteUrl(rawHref, el.baseURI || document.baseURI);
       if (!href || (!force && rec.lastAnalyzedSrc === href)) return;
       if (this.settings.zeroFlashShield) this.overlay.setScanning(el);
       this.dispatchUrlAnalysis(el, rec, href, rec.isIntersecting ? 8 : 2);
@@ -328,9 +432,10 @@ export class MediaScanner {
     // CSS background-image
     const bgStr = (el as HTMLElement).style?.backgroundImage || getComputedStyle(el).backgroundImage;
     const match = bgStr.match(BG_URL_REGEX);
-    const bgUrl = match?.[1];
-    if (!bgUrl || bgUrl.startsWith('data:image/svg+xml')) return;
-    if (!force && rec.lastAnalyzedSrc === bgUrl) return;
+    const rawBgUrl = match?.[1];
+    if (!rawBgUrl || rawBgUrl.startsWith('data:image/svg+xml')) return;
+    const bgUrl = this.toAbsoluteUrl(rawBgUrl, el.baseURI || document.baseURI);
+    if (!bgUrl || (!force && rec.lastAnalyzedSrc === bgUrl)) return;
     if (this.settings.zeroFlashShield) this.overlay.setScanning(el);
     this.dispatchUrlAnalysis(el, rec, bgUrl, rec.isIntersecting ? 8 : 2);
   }
@@ -344,10 +449,12 @@ export class MediaScanner {
     if (rec.inFlight && rec.lastAnalyzedSrc === url) return;
     rec.lastAnalyzedSrc = url;
     rec.inFlight = true;
+    const seq = ++rec.requestSeq;
 
     chrome.runtime.sendMessage(
       { type: 'GB_ANALYZE_URL', url, priority } satisfies RuntimeRequest,
       (resp: AnalyzeResponse | undefined) => {
+        if (seq !== rec.requestSeq || !el.isConnected) return;
         rec.inFlight = false;
         if (chrome.runtime.lastError || !resp?.ok || !resp.verdict) {
           if (!this.settings.failClosedOnError) {
@@ -378,6 +485,7 @@ export class MediaScanner {
     if (rec.inFlight && rec.lastAnalyzedSrc === key) return;
     rec.lastAnalyzedSrc = key;
     rec.inFlight = true;
+    const seq = ++rec.requestSeq;
 
     chrome.runtime.sendMessage(
       {
@@ -388,6 +496,7 @@ export class MediaScanner {
         priority,
       } satisfies RuntimeRequest,
       (resp: AnalyzeResponse | undefined) => {
+        if (seq !== rec.requestSeq || !el.isConnected) return;
         rec.inFlight = false;
         if (chrome.runtime.lastError || !resp?.ok || !resp.verdict) {
           if (!this.settings.failClosedOnError) {

@@ -50,6 +50,27 @@ chrome.runtime.onMessage.addListener(
       return false;
     }
 
+    if (message.type === 'GB_OFFSCREEN_CLEAR_CACHE') {
+      host
+        .clearCache()
+        .then(() => sendResponse({ ok: true }))
+        .catch(() => sendResponse({ ok: false }));
+      return true;
+    }
+
+    if (message.type === 'GB_OFFSCREEN_BENCHMARK_ANALYZE') {
+      host
+        .benchmarkDataUrl(message.dataUrl, message.cascadeMode)
+        .then((raw) => sendResponse({ ok: true, raw } satisfies AnalyzeResponse))
+        .catch((err) =>
+          sendResponse({
+            ok: false,
+            error: err instanceof Error ? err.message : String(err),
+          } satisfies AnalyzeResponse)
+        );
+      return true;
+    }
+
     return false;
   }
 );

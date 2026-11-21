@@ -1,18 +1,14 @@
 import {
   applyProfilePreset,
   createDefaultSettings,
+  normalizeDomain,
   type ExtensionSettings,
 } from '@ghadhul-bashar/core';
 
 const STORAGE_KEY = 'gb_settings_v1';
 
 export function normalizeHostname(urlOrHost: string): string {
-  try {
-    const raw = urlOrHost.includes('://') ? new URL(urlOrHost).hostname : urlOrHost;
-    return raw.toLowerCase().replace(/^www\./, '');
-  } catch {
-    return urlOrHost.toLowerCase().replace(/^www\./, '');
-  }
+  return normalizeDomain(urlOrHost);
 }
 
 export async function loadSettings(): Promise<ExtensionSettings> {

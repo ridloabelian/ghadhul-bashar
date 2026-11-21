@@ -37,6 +37,41 @@ export interface Dictionary {
   onboardingSubheading: string;
   onboardingContinue: string;
   childExemptionNote: string;
+  openOptionsBtn: string;
+  optionsTitle: string;
+  optionsSubtitle: string;
+  sectionProfilesTitle: string;
+  sectionVisualTitle: string;
+  sectionWhitelistTitle: string;
+  sectionSelfControlTitle: string;
+  sectionBackupTitle: string;
+  ruleFemaleFace: string;
+  ruleMaleFace: string;
+  ruleAwrahBody: string;
+  ruleExposedNudity: string;
+  ruleAutoEscalateNsfw: string;
+  ruleChildAgeLabel: string;
+  grayscaleLabel: string;
+  failClosedLabel: string;
+  altPeekLabel: string;
+  previewTitle: string;
+  previewSafeText: string;
+  addDomainPlaceholder: string;
+  addBtn: string;
+  removeBtn: string;
+  emptyWhitelist: string;
+  lockDurationLabel: string;
+  exportBtn: string;
+  importBtn: string;
+  clearCacheBtn: string;
+  backupHint: string;
+  diagBackendLabel: string;
+  diagModelsLabel: string;
+  msgSaved: string;
+  msgImported: string;
+  msgImportFailed: string;
+  msgCacheCleared: string;
+  msgInvalidDomain: string;
 }
 
 export const TRANSLATIONS: Record<LocaleCode, Dictionary> = {
@@ -108,6 +143,42 @@ export const TRANSLATIONS: Record<LocaleCode, Dictionary> = {
       'Semua analisis AI berjalan 100% di perangkat Anda tanpa internet atau server luar.',
     onboardingContinue: 'Simpan & Mulai Menjelajah Aman',
     childExemptionNote: 'Otomatis mengecualikan wajah anak-anak (<10 tahun).',
+    openOptionsBtn: 'Pengaturan Lengkap',
+    optionsTitle: 'Pengaturan Lengkap Ghadhul Bashar',
+    optionsSubtitle:
+      'Kendalikan aturan Fiqh granular, pratinjau sensor bedah, daftar pengecualian situs, benteng kendali diri, dan pencadangan konfigurasi lokal.',
+    sectionProfilesTitle: '1. Profil Fiqh & Aturan Granular',
+    sectionVisualTitle: '2. Gaya Sensor Visual, Video Guard & Pratinjau',
+    sectionWhitelistTitle: '3. Daftar Pengecualian Domain (Whitelist)',
+    sectionSelfControlTitle: '4. Benteng Kendali Diri & Hardening OS',
+    sectionBackupTitle: '5. Cadangkan Konfigurasi (Export / Import) & Diagnostik',
+    ruleFemaleFace: 'Sensor Wajah Wanita Dewasa',
+    ruleMaleFace: 'Sensor Wajah Pria Dewasa',
+    ruleAwrahBody: 'Sensor Bagian Aurat Terbuka',
+    ruleExposedNudity: 'Sensor Ketelanjangan Eksplisit',
+    ruleAutoEscalateNsfw: 'Eskalasi Otomatis Full-Mask jika Skor NSFW Tinggi',
+    ruleChildAgeLabel: 'Batas Usia Pengecualian Anak',
+    grayscaleLabel: 'Desaturasi Abu-Abu pada Area Sensor',
+    failClosedLabel: 'Fail-Closed (Tetap Tutup Jika Gagal Memuat)',
+    altPeekLabel: 'Alt + Hover untuk Intip Sementara',
+    previewTitle: 'Pratinjau Langsung Smart Surgical Mask',
+    previewSafeText: 'Slide materi & teks di sekitar area terdeteksi tetap 100% tajam.',
+    addDomainPlaceholder: 'contoh: quran.com',
+    addBtn: 'Tambah',
+    removeBtn: 'Hapus',
+    emptyWhitelist: 'Belum ada domain yang dikecualikan.',
+    lockDurationLabel: 'Durasi Kunci Komitmen',
+    exportBtn: 'Export Konfigurasi (.json)',
+    importBtn: 'Import Konfigurasi (.json)',
+    clearCacheBtn: 'Bersihkan Cache Deteksi Lokal',
+    backupHint: 'File ekspor tidak menyertakan hash PIN. Mengimpor konfigurasi yang lebih longgar tetap mematuhi Time-Lock & PIN aktif.',
+    diagBackendLabel: 'Backend Inferensi Aktif',
+    diagModelsLabel: 'Model Lokal (4 ONNX XNNPACK)',
+    msgSaved: 'Pengaturan disimpan.',
+    msgImported: 'Konfigurasi berhasil diimpor.',
+    msgImportFailed: 'Gagal mengimpor konfigurasi: format tidak valid atau dikunci Time-Lock.',
+    msgCacheCleared: 'Cache deteksi memori & IndexedDB telah dibersihkan.',
+    msgInvalidDomain: 'Masukkan nama domain yang valid (mis. example.com).',
   },
   en: {
     isRtl: false,
@@ -177,6 +248,42 @@ export const TRANSLATIONS: Record<LocaleCode, Dictionary> = {
       '100% local AI inference inside your browser. Zero images or URLs ever leave your device.',
     onboardingContinue: 'Save & Browse Safely',
     childExemptionNote: 'Automatically exempts children faces (<10 years old).',
+    openOptionsBtn: 'Full Settings',
+    optionsTitle: 'Ghadhul Bashar Full Settings',
+    optionsSubtitle:
+      'Fine-tune granular Fiqh rules, live surgical mask preview, domain allowlist, offline self-control vault, and local config backup.',
+    sectionProfilesTitle: '1. Modesty Profile & Granular Rules',
+    sectionVisualTitle: '2. Visual Masking, Video Guard & Live Preview',
+    sectionWhitelistTitle: '3. Domain Whitelist Manager',
+    sectionSelfControlTitle: '4. Offline Self-Control Vault & OS Hardening',
+    sectionBackupTitle: '5. Configuration Backup (Export / Import) & Diagnostics',
+    ruleFemaleFace: 'Mask Adult Female Faces',
+    ruleMaleFace: 'Mask Adult Male Faces',
+    ruleAwrahBody: 'Mask Exposed Awrah Body Regions',
+    ruleExposedNudity: 'Mask Explicit Nudity',
+    ruleAutoEscalateNsfw: 'Auto-Escalate to Full-Mask on High NSFW Score',
+    ruleChildAgeLabel: 'Child Exemption Age Cutoff',
+    grayscaleLabel: 'Desaturate Masked Region (Grayscale)',
+    failClosedLabel: 'Fail-Closed (Keep Shielded on Fetch/Decode Error)',
+    altPeekLabel: 'Alt + Hover Temporary Peek',
+    previewTitle: 'Live Smart Surgical Mask Preview',
+    previewSafeText: 'Surrounding slides, code, and captions stay 100% crisp.',
+    addDomainPlaceholder: 'e.g. quran.com',
+    addBtn: 'Add',
+    removeBtn: 'Remove',
+    emptyWhitelist: 'No whitelisted domains yet.',
+    lockDurationLabel: 'Commitment Lock Duration',
+    exportBtn: 'Export Config (.json)',
+    importBtn: 'Import Config (.json)',
+    clearCacheBtn: 'Clear Local Detection Cache',
+    backupHint: 'Exports strip Partner PIN hashes. Importing weaker settings remains blocked while Time-Lock or PIN is active.',
+    diagBackendLabel: 'Active Inference Backend',
+    diagModelsLabel: 'Local Models (4 ONNX XNNPACK)',
+    msgSaved: 'Settings saved.',
+    msgImported: 'Configuration imported successfully.',
+    msgImportFailed: 'Failed to import configuration: invalid JSON or blocked by active Time-Lock.',
+    msgCacheCleared: 'In-memory & IndexedDB vision cache cleared.',
+    msgInvalidDomain: 'Enter a valid domain name (e.g. example.com).',
   },
   ar: {
     isRtl: true,
@@ -246,5 +353,41 @@ export const TRANSLATIONS: Record<LocaleCode, Dictionary> = {
       'يعمل الذكاء الاصطناعي بالكامل على جهازك دون إرسال أي صور أو بيانات.',
     onboardingContinue: 'حفظ وبدء التصفح الآمن',
     childExemptionNote: 'استثناء تلقائي لوجوه الأطفال (أقل من ١٠ سنوات).',
+    openOptionsBtn: 'الإعدادات الكاملة',
+    optionsTitle: 'الإعدادات الكاملة لغض البصر',
+    optionsSubtitle:
+      'تحكم دقيق في قواعد الحماية، معاينة الطمس الموضعي، قائمة المواقع المستثناة، خزنة ضبط النفس، والنسخ الاحتياطي للإعدادات.',
+    sectionProfilesTitle: '١. ملف الحماية والقواعد الدقيقة',
+    sectionVisualTitle: '٢. نمط الطمس البصري وحماية الفيديو والمعاينة',
+    sectionWhitelistTitle: '٣. إدارة النطاقات المستثناة',
+    sectionSelfControlTitle: '٤. خزنة ضبط النفس وحماية النظام',
+    sectionBackupTitle: '٥. تصدير واستيراد الإعدادات والتشخيص',
+    ruleFemaleFace: 'طمس وجوه النساء البالغات',
+    ruleMaleFace: 'طمس وجوه الرجال البالغين',
+    ruleAwrahBody: 'طمس مناطق العورة المكشوفة',
+    ruleExposedNudity: 'طمس العري الصريح',
+    ruleAutoEscalateNsfw: 'ترقية تلقائية للطمس الكامل عند ارتفاع مؤشر NSFW',
+    ruleChildAgeLabel: 'الحد العمري لاستثناء الأطفال',
+    grayscaleLabel: 'تحويل منطقة الطمس إلى تدرج رمادي',
+    failClosedLabel: 'إغلاق آمن عند تعذر فحص الوسائط',
+    altPeekLabel: 'معاينة مؤقتة عند الضغط على Alt مع التمرير',
+    previewTitle: 'معاينة حية للطمس الذكي الموضعي',
+    previewSafeText: 'النصوص والشرائح التعليمية المحيطة تبقى واضحة ١٠٠٪.',
+    addDomainPlaceholder: 'مثال: quran.com',
+    addBtn: 'إضافة',
+    removeBtn: 'إزالة',
+    emptyWhitelist: 'لا توجد نطاقات مستثناة حالياً.',
+    lockDurationLabel: 'مدة القفل الزمني',
+    exportBtn: 'تصدير الإعدادات (.json)',
+    importBtn: 'استيراد الإعدادات (.json)',
+    clearCacheBtn: 'مسح ذاكرة الفحص المؤقتة',
+    backupHint: 'ملف التصدير لا يتضمن رمز الشريك. يظل القفل الزمني سارياً عند محاولة استيراد إعدادات أضعف.',
+    diagBackendLabel: 'محرك الاستدلال النشط',
+    diagModelsLabel: 'النماذج المحلية (٤ نماذج ONNX)',
+    msgSaved: 'تم حفظ الإعدادات.',
+    msgImported: 'تم استيراد الإعدادات بنجاح.',
+    msgImportFailed: 'تعذر استيراد الإعدادات: صيغة غير صالحة أو القفل الزمني نشط.',
+    msgCacheCleared: 'تم مسح ذاكرة التخزين المؤقت للفحص.',
+    msgInvalidDomain: 'أدخل اسم نطاق صحيح (مثال: example.com).',
   },
 };

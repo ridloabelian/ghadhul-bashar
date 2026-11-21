@@ -13,6 +13,7 @@ import {
   NUDENET_LABELS,
   type RawFaceCandidate,
 } from './nms.js';
+import { computeOutsideFaceSkin, profileVisualSignals } from './signals.js';
 
 export type OrtModule = typeof OrtNamespace;
 
@@ -26,6 +27,7 @@ export interface AnalyzeOptions {
   runNsfw?: boolean;
   minConfidence?: number;
   maxFaces?: number;
+  cascadeMode?: 'adaptive' | 'legacy-full';
 }
 
 const MODEL_FILES = {
@@ -39,7 +41,15 @@ const NUDENET_SIZE = 320;
 const AGE_GENDER_SIZE = 62;
 const NSFW_SIZE = 384;
 const YUNET_MIN_INPUT = 128;
-const YUNET_MAX_INPUT = 320;
+const YUNET_MAX_INPUT = 256;
+
+const SEVERE_NUDITY_CLASSES = new Set<BodyPartClass>([
+  'FEMALE_BREAST_EXPOSED',
+  'FEMALE_GENITALIA_EXPOSED',
+  'MALE_GENITALIA_EXPOSED',
+  'BUTTOCKS_EXPOSED',
+  'ANUS_EXPOSED',
+]);
 
 function logit(p: number): number {
   const c = Math.min(1 - 1e-4, Math.max(1e-4, p));
@@ -459,19 +469,150 @@ export class VisionEngine {
     const t0 = performance.now();
     const minConf = options.minConfidence ?? 0.14;
     const maxFaces = options.maxFaces ?? 16;
+    const cascadeMode = options.cascadeMode ?? 'adaptive';
+    const stagesRun: string[] = [];
 
-    // Execute sequentially to avoid concurrent session.run() errors on single-thread WASM EP.
-    const { boxes, ambientColor } = await this.runNudeNet(source, srcW, srcH, minConf);
+    // Single-pass 64x64 RGBA probe (<0.4ms) computes ambient color & visual gate signals.
+    const rgba64 = this.extractRgba(source, 0, 0, srcW, srcH, 0, 0, 64, 64, 64, 64);
+    const signals = profileVisualSignals(rgba64);
+
+    if (cascadeMode === 'legacy-full') {
+      const { boxes, ambientColor } = await this.runNudeNet(source, srcW, srcH, minConf);
+      stagesRun.push('nudenet');
+      const yunetFaces = await this.runYuNet(source, srcW, srcH);
+      stagesRun.push('yunet');
+      const { merged, faceIndices } = mergeFaceCandidates(boxes, yunetFaces, maxFaces);
+      if (faceIndices.length > 0) {
+        stagesRun.push('age-gender');
+        await this.refineFaces(source, srcW, srcH, merged, boxes, faceIndices);
+      }
+      let nsfwScore = 0;
+      if (options.runNsfw !== false) {
+        stagesRun.push('marqo-nsfw');
+        nsfwScore = await this.runNsfwScore(source, srcW, srcH);
+      }
+      return {
+        regions: merged,
+        nsfwScore,
+        ambientColor,
+        backend: this.backend,
+        latencyMs: Math.round((performance.now() - t0) * 10) / 10,
+        stagesRun,
+      };
+    }
+
+    // Stage 0: Fast non-organic graphic / UI / blank gradient skip
+    if (signals.isTrivialGraphic) {
+      return {
+        regions: [],
+        nsfwScore: 0,
+        ambientColor: signals.ambientColor,
+        backend: this.backend,
+        latencyMs: Math.round((performance.now() - t0) * 10) / 10,
+        stagesRun: ['signal-skip'],
+      };
+    }
+
+    // Stage 1: Lightweight YuNet face check (~16-24ms WASM)
     const yunetFaces = await this.runYuNet(source, srcW, srcH);
+    stagesRun.push('yunet');
+    const preFaceSkin = computeOutsideFaceSkin(rgba64, yunetFaces);
 
-    const { merged, faceIndices } = mergeFaceCandidates(boxes, yunetFaces, maxFaces);
+    const maxFaceH = yunetFaces.reduce((m, f) => Math.max(m, f.h), 0);
+    const isCleanHeadshot =
+      yunetFaces.length > 0 &&
+      maxFaceH >= 0.24 &&
+      preFaceSkin.outsideSkinRatio < 0.038 &&
+      preFaceSkin.outsidePeakBlockSkin < 0.22 &&
+      signals.animeSkinRatio < 0.05 &&
+      !signals.mangaLineArtSignal;
 
+    const isNonPhotographicBodyScene =
+      yunetFaces.length === 0 &&
+      signals.skinRatio < 0.022 &&
+      signals.peakBlockSkinRatio < 0.16 &&
+      !signals.isGrayscaleRichPhoto;
+
+    // Stage 2: Conditional NudeNet-320n for full-body, exposed skin, headless, or monochrome photo scenes
+    let nudenetBoxes: RegionBox[] = [];
+    let ambientColor = signals.ambientColor;
+    if (!isCleanHeadshot && !isNonPhotographicBodyScene) {
+      const nude = await this.runNudeNet(source, srcW, srcH, minConf);
+      nudenetBoxes = nude.boxes;
+      ambientColor = nude.ambientColor;
+      stagesRun.push('nudenet');
+    }
+
+    // Stage 3: Merge faces & refine gender/age (<10 yrs child exemption)
+    const { merged, faceIndices } = mergeFaceCandidates(nudenetBoxes, yunetFaces, maxFaces);
+    if (faceIndices.length > 0) {
+      stagesRun.push('age-gender');
+      await this.refineFaces(source, srcW, srcH, merged, nudenetBoxes, faceIndices);
+    }
+
+    // Stage 4: Conditional Marqo ViT-Tiny NSFW only on close-up skin, borderline body cues, or anime/manga
+    let nsfwScore = 0;
+    if (options.runNsfw !== false) {
+      const hasSevereNudity = merged.some(
+        (b) => SEVERE_NUDITY_CLASSES.has(b.label) && b.confidence >= 0.28
+      );
+      if (hasSevereNudity) {
+        nsfwScore = 0.88;
+      } else {
+        const mergedFaces = merged.filter(
+          (b) => b.label === 'FACE_FEMALE' || b.label === 'FACE_MALE' || b.label === 'FACE_CHILD'
+        );
+        const postSkin =
+          mergedFaces.length !== yunetFaces.length
+            ? computeOutsideFaceSkin(rgba64, mergedFaces)
+            : preFaceSkin;
+        const hasBodyBoxes = nudenetBoxes.some(
+          (b) => b.label !== 'FACE_FEMALE' && b.label !== 'FACE_MALE'
+        );
+        const hasBorderlineBody = nudenetBoxes.some(
+          (b) =>
+            b.label !== 'FACE_FEMALE' &&
+            b.label !== 'FACE_MALE' &&
+            b.confidence >= 0.12 &&
+            b.confidence < 0.28
+        );
+        const needsMarqo =
+          ((postSkin.outsideSkinRatio >= 0.16 || postSkin.outsidePeakBlockSkin >= 0.42) && !hasBodyBoxes) ||
+          hasBorderlineBody ||
+          signals.animeSkinRatio >= 0.07 ||
+          signals.mangaLineArtSignal;
+
+        if (needsMarqo) {
+          stagesRun.push('marqo-nsfw');
+          nsfwScore = await this.runNsfwScore(source, srcW, srcH);
+        }
+      }
+    }
+
+    return {
+      regions: merged,
+      nsfwScore,
+      ambientColor,
+      backend: this.backend,
+      latencyMs: Math.round((performance.now() - t0) * 10) / 10,
+      stagesRun,
+    };
+  }
+
+  private async refineFaces(
+    source: CanvasImageSource,
+    srcW: number,
+    srcH: number,
+    merged: RegionBox[],
+    nudenetBoxes: RegionBox[],
+    faceIndices: number[]
+  ): Promise<void> {
     for (const idx of faceIndices) {
       const box = merged[idx]!;
       const { femaleProb, estimatedAge } = await this.runAgeGenderOnFace(source, srcW, srcH, box);
 
-      const wasYuNetOnly = !boxes.some(
-        (b) => (b.label === 'FACE_FEMALE' || b.label === 'FACE_MALE') && boxIoU(b, box) >= 0.30
+      const wasYuNetOnly = !nudenetBoxes.some(
+        (b) => (b.label === 'FACE_FEMALE' || b.label === 'FACE_MALE') && boxIoU(b, box) >= 0.3
       );
 
       let finalLabel: BodyPartClass;
@@ -480,7 +621,10 @@ export class VisionEngine {
       } else if (wasYuNetOnly) {
         finalLabel = femaleProb >= 0.5 ? 'FACE_FEMALE' : 'FACE_MALE';
       } else {
-        const nudeFemaleProb = box.label === 'FACE_FEMALE' ? Math.max(0.55, box.confidence) : Math.min(0.45, 1 - box.confidence);
+        const nudeFemaleProb =
+          box.label === 'FACE_FEMALE'
+            ? Math.max(0.55, box.confidence)
+            : Math.min(0.45, 1 - box.confidence);
         const fused = sigmoid(0.45 * logit(nudeFemaleProb) + 0.55 * logit(femaleProb));
         finalLabel = fused >= 0.5 ? 'FACE_FEMALE' : 'FACE_MALE';
       }
@@ -491,16 +635,6 @@ export class VisionEngine {
         estimatedAge,
       };
     }
-
-    const nsfwScore = options.runNsfw !== false ? await this.runNsfwScore(source, srcW, srcH) : 0;
-
-    return {
-      regions: merged,
-      nsfwScore,
-      ambientColor,
-      backend: this.backend,
-      latencyMs: Math.round((performance.now() - t0) * 10) / 10,
-    };
   }
 
   async dispose(): Promise<void> {
