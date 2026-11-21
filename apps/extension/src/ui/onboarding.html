@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="id" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ghadhul Bashar (غض البصر) — Pilih Profil</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="onboarding-body">
+    <div class="onboarding-container">
+      <div class="header">
+        <div class="brand">
+          <img src="../icons/icon-48.png" alt="Ghadhul Bashar" />
+          <div>
+            <h1>Ghadhul Bashar <span class="arabic">غض البصر</span></h1>
+            <p id="tagline">100% On-Device Surgical AI Gaze Shield</p>
+          </div>
+        </div>
+        <select id="localeSelect" class="lang-select" aria-label="Language">
+          <option value="id">Bahasa Indonesia</option>
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+        </select>
+      </div>
+
+      <span class="badge" id="onboardingBadge">Auto-Protect Sudah Aktif Sejak Detik Pertama</span>
+      <h2 id="onboardingHeading" style="font-size: 26px; margin-bottom: 8px;">Pilih Profil Pandangan Anda</h2>
+      <p id="onboardingSubheading" style="color: var(--muted); font-size: 14px;">
+        Semua analisis AI berjalan 100% di perangkat Anda tanpa internet atau server luar.
+      </p>
+
+      <div class="profile-cards" id="cardsGrid"></div>
+
+      <div class="controls-row" style="margin-top: 10px;">
+        <span id="childNote" style="font-size: 12px; color: var(--muted);">
+          Otomatis mengecualikan wajah anak-anak (&lt;10 tahun).
+        </span>
+        <button id="continueBtn" class="btn btn-primary" style="padding: 11px 20px; font-size: 14px;">
+          Simpan &amp; Mulai Menjelajah Aman
+        </button>
+      </div>
+    </div>
+    <script type="module" src="onboarding.js"></script>
+  </body>
+</html>

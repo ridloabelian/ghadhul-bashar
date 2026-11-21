@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="id" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ghadhul Bashar (غض البصر)</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="popup-body">
+    <div class="header">
+      <div class="brand">
+        <img src="../icons/icon-48.png" alt="Ghadhul Bashar" />
+        <div>
+          <h1><span id="appName">Ghadhul Bashar</span> <span class="arabic" id="arabicTitle">غض البصر</span></h1>
+          <p id="tagline">Pelindung Pandangan AI Lokal</p>
+        </div>
+      </div>
+      <select id="localeSelect" class="lang-select" aria-label="Language">
+        <option value="id">ID</option>
+        <option value="en">EN</option>
+        <option value="ar">AR</option>
+      </select>
+    </div>
+
+    <div class="card controls-row">
+      <div>
+        <strong id="statusText" style="font-size: 13px;">Proteksi Aktif</strong>
+        <div id="siteHost" style="font-size: 11px; color: var(--muted);">—</div>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button id="toggleSiteBtn" class="btn btn-sm">Situs Ini</button>
+        <button id="toggleGlobalBtn" class="btn btn-primary btn-sm">ON</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-val" id="statChecked">0</div>
+          <div class="stat-lbl" id="lblChecked">Diperiksa</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statMasked">0</div>
+          <div class="stat-lbl" id="lblMasked">Disensor</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statCache">0</div>
+          <div class="stat-lbl" id="lblCache">Cache Hit</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statLatency">0ms</div>
+          <div class="stat-lbl" id="lblEngine">WASM</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title" id="profileLabel">Profil Fiqh / Aturan Sensor</div>
+      <div class="pill-grid" id="profileGrid">
+        <button class="pill-btn" data-profile="brothers">Ikhwan</button>
+        <button class="pill-btn" data-profile="sisters">Akhwat</button>
+        <button class="pill-btn" data-profile="family">Keluarga</button>
+        <button class="pill-btn" data-profile="strict">Strict</button>
+        <button class="pill-btn" data-profile="nsfw-only" style="grid-column: span 2;">NSFW-Only</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label for="maskStyleSelect"><span id="maskStyleLabel">Gaya Sensor Visual</span></label>
+        <select id="maskStyleSelect">
+          <option value="surgical-frosted">Smart Surgical Frosted Blur</option>
+          <option value="surgical-ambient">Solid Ambient Fill</option>
+          <option value="surgical-pixelate">Pixelate / Mosaic Regional</option>
+          <option value="whole-blur">Whole-Media Blur Penuh</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="sensitivitySelect"><span id="sensitivityLabel">Sensitivitas AI</span></label>
+        <select id="sensitivitySelect">
+          <option value="relaxed">Santai</option>
+          <option value="balanced">Seimbang</option>
+          <option value="strict">Ketat</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="blurRange">
+          <span id="blurStrengthLabel">Kekuatan Blur</span>
+          <span id="blurValue">22px</span>
+        </label>
+        <input id="blurRange" type="range" min="10" max="48" step="2" value="22" />
+      </div>
+
+      <label class="switch-row">
+        <span id="autoMuteLabel">Auto-Mute Audio Saat Video Disensor</span>
+        <input id="autoMuteCheck" type="checkbox" checked />
+      </label>
+      <label class="switch-row">
+        <span id="zeroFlashLabel">Zero-Flash Shimmer Shield</span>
+        <input id="zeroFlashCheck" type="checkbox" checked />
+      </label>
+    </div>
+
+    <div class="card">
+      <div class="section-title" id="selfControlTitle">Benteng Kendali Diri (Offline)</div>
+      <div id="lockBanner" class="lock-banner hidden"></div>
+      <div class="controls-row" style="margin-bottom: 8px;">
+        <span id="lockStatusText" style="font-size: 12px;">Tidak Terkunci</span>
+        <button id="lockBtn" class="btn btn-sm">Kunci 1 Jam</button>
+      </div>
+      <div class="controls-row">
+        <input id="pinInput" type="password" placeholder="PIN Partner (min 4)" style="flex: 1;" />
+        <button id="pinActionBtn" class="btn btn-sm">Set PIN</button>
+      </div>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

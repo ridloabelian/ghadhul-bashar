@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noUncheckedIndexedAccess": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "types": ["chrome", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@ghadhul-bashar/core": ["packages/core/src/index.ts"],
+      "@ghadhul-bashar/core/*": ["packages/core/src/*"],
+      "@ghadhul-bashar/vision": ["packages/vision/src/index.ts"],
+      "@ghadhul-bashar/vision/*": ["packages/vision/src/*"]
+    }
+  }
+}

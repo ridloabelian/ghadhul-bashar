@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+.model-cache/
+apps/extension/dist/
+dist/
+*.zip
+test-results/
+playwright-report/
+.DS_Store
+*.log
+__pycache__/
+*.pyc

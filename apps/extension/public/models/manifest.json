@@ -1,0 +1,77 @@
+{
+  "models": [
+    {
+      "file": "nudenet-320n.quant.onnx",
+      "sizeBytes": 8092983,
+      "sha256": "52076305a914654b79eb93343bc8ac8e4e9175c226275ac5da41360f64c44d95",
+      "inputName": "pixels",
+      "inputShape": [
+        1,
+        320,
+        320,
+        4
+      ],
+      "outputs": [
+        "output0"
+      ]
+    },
+    {
+      "file": "yunet-2023mar.onnx",
+      "sizeBytes": 230084,
+      "sha256": "01962e583ec5e2422be685d6b98efcad3f7b345ea9cafa52a0eca5cce3f2895f",
+      "inputName": "pixels",
+      "inputShape": [
+        1,
+        256,
+        256,
+        4
+      ],
+      "outputs": [
+        "cls_8",
+        "cls_16",
+        "cls_32",
+        "obj_8",
+        "obj_16",
+        "obj_32",
+        "bbox_8",
+        "bbox_16",
+        "bbox_32",
+        "kps_8",
+        "kps_16",
+        "kps_32"
+      ]
+    },
+    {
+      "file": "agr0013-age-gender.quant.onnx",
+      "sizeBytes": 4318277,
+      "sha256": "08d2f6ea91f863075ab9a5fddb7afaeaab482dd8028e6405040dd000fa073c8d",
+      "inputName": "pixels",
+      "inputShape": [
+        1,
+        62,
+        62,
+        4
+      ],
+      "outputs": [
+        "gender",
+        "age"
+      ]
+    },
+    {
+      "file": "marqo-nsfw-tiny.quant.onnx",
+      "sizeBytes": 6632454,
+      "sha256": "32bf8039573c90169f64117948c9a702b725e16d82bddace260108c0cea6e166",
+      "inputName": "pixels",
+      "inputShape": [
+        1,
+        384,
+        384,
+        4
+      ],
+      "outputs": [
+        "nsfw"
+      ]
+    }
+  ],
+  "totalSizeBytes": 19273798
+}

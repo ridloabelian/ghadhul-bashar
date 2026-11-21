@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "Ghadhul Bashar (غض البصر) — AI Gaze Shield",
+  "short_name": "Ghadhul Bashar",
+  "version": "1.0.0",
+  "description": "Fast, 100% on-device surgical AI gaze protection (WebGPU/WASM ONNX, Zero-Flash, Zero-Breakage).",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "ghadhul-bashar@ridloabelian.dev",
+      "strict_min_version": "121.0"
+    }
+  },
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Ghadhul Bashar (غض البصر)",
+    "default_popup": "ui/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
